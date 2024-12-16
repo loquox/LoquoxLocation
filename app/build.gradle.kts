@@ -44,6 +44,7 @@ dependencies {
 
 
     implementation("androidx.room:room-runtime:2.5.0")
+    implementation(libs.androidx.benchmark.macro)
     annotationProcessor("androidx.room:room-compiler:2.5.0")
 
     // Opcional: para usar coroutines con Room

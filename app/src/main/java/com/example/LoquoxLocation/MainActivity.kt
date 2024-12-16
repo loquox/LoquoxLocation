@@ -10,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,9 +57,11 @@ import com.google.android.gms.location.LocationServices
 
 class MainActivity : ComponentActivity() {
 
-    data class Sitio(val latidud: String, val longitud: String)
+//    data class Sitio(val latidud: String, val longitud: String)
 
-    private val sitiosViewModel: SitiosViewModel by viewModels()
+    private val sitiosViewModel: SitiosViewModel by viewModels {
+        SitiosViewModelFactory(application)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,8 +98,13 @@ fun LocationScreen(navController: NavHostController,
     val proximidad = 100.0
     var distancia by rememberSaveable { mutableStateOf(0.0) }
 
+
+    var tituloPunto by rememberSaveable { mutableStateOf("") }
+    var fotoPunto by rememberSaveable { mutableStateOf("") }
     var latitudPunto by rememberSaveable { mutableStateOf("") }
     var longitudPunto by rememberSaveable { mutableStateOf("") }
+
+
     val locationPermissionState = rememberPermissionState(
         permission = Manifest.permission.ACCESS_FINE_LOCATION
     )
@@ -107,20 +115,23 @@ fun LocationScreen(navController: NavHostController,
 
 
 
-
     Column(modifier = Modifier.padding(10.dp)) {
 
             IntroducirCoor(
                 navController,
+                tituloPunto,
+                fotoPunto,
                 latitudPunto,
                 longitudPunto,
                 sitiosViewModel,
-                onCoordenadasConfirmadas = { nuevaLatitud, nuevaLongitud ->
+                onCoordenadasConfirmadas = { titulo, foto, nuevaLatitud, nuevaLongitud ->
                     latitudPunto = nuevaLatitud
                     longitudPunto = nuevaLongitud
+                    tituloPunto = titulo
+                    fotoPunto = foto
                     confirmarCoordenadas = true
-                    sitiosViewModel.listaSitios.add(MainActivity.Sitio(nuevaLatitud, nuevaLongitud)
-                    )
+                    sitiosViewModel.guardarSitio(tituloPunto, fotoPunto, latitudPunto, longitudPunto)
+
                 }
             )
 
@@ -194,14 +205,17 @@ fun LocationScreen(navController: NavHostController,
                 }
             }}
 
-        if (!locationPermissionState.status.isGranted) {
-            Button(onClick = {
-                locationPermissionState.launchPermissionRequest()
-            }) {
-                Text(text = "Solicitar Permiso")
-            }
+
+    }
+
+    if (!locationPermissionState.status.isGranted) {
+        Button(onClick = {
+            locationPermissionState.launchPermissionRequest()
+        }) {
+            Text(text = "Solicitar Permiso")
         }
     }
+
 
     val locationRequest = LocationRequest.create().apply {
         interval = 10000
@@ -257,11 +271,14 @@ fun LocationScreen(navController: NavHostController,
 @Composable
 fun IntroducirCoor(
                     navController: NavHostController,
+                    titulo: String,
+                    foto: String,
                     latitud: String,
-                   longitud: String,
-                   sitiosViewModel: SitiosViewModel,
-                   onCoordenadasConfirmadas: (String, String) -> Unit){
-
+                    longitud: String,
+                    sitiosViewModel: SitiosViewModel,
+                   onCoordenadasConfirmadas: (String, String, String, String) -> Unit){
+    var titulolocal by rememberSaveable { mutableStateOf(titulo) }
+    var fotolocal by rememberSaveable { mutableStateOf(foto) }
     var latitudlocal by rememberSaveable { mutableStateOf(latitud) }
     var longitudlocal by rememberSaveable { mutableStateOf(longitud) }
 
@@ -278,6 +295,27 @@ fun IntroducirCoor(
                 text = "Introducir Coordenadas",
                 style = MaterialTheme.typography.headlineSmall
             )
+
+            Spacer(modifier = Modifier.padding(16.dp))
+
+            OutlinedTextField(
+                value = titulolocal,
+                onValueChange = { titulolocal = it },
+                label = { Text("Introducir titulo del punto destino") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+
+            Spacer(modifier = Modifier.padding(16.dp))
+
+            OutlinedTextField(
+                value = fotolocal,
+                onValueChange = { fotolocal = it },
+                label = { Text("Introducir foto del punto destino") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+
 
             Spacer(modifier = Modifier.padding(16.dp))
 
@@ -310,20 +348,24 @@ fun IntroducirCoor(
                     )
             )
 
-            Spacer(modifier = Modifier.padding(16.dp))
 
-            Button(onClick = {
-                onCoordenadasConfirmadas(latitudlocal, longitudlocal)
-                latitudlocal = ""
-                longitudlocal = ""
-            }) {
-                Text("Confirmar")
-            }
 
-            Button(onClick = {
-                navController.navigate("listaSitios")
-            }) {
-                Text("Revisar la lista de sitios")
+            Row {
+                Button(onClick = {
+                    onCoordenadasConfirmadas(titulolocal, fotolocal, latitudlocal, longitudlocal)
+                    titulolocal = ""
+                    fotolocal = ""
+                    latitudlocal = ""
+                    longitudlocal = ""
+                }) {
+                    Text("Confirmar")
+                }
+
+                Button(onClick = {
+                    navController.navigate("listaSitios")
+                }) {
+                    Text("Revisar la lista de sitios")
+                }
             }
         }
     }
