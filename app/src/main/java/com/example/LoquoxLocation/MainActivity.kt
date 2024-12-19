@@ -283,6 +283,7 @@ fun IntroducirCoor(
     var longitudlocal by rememberSaveable { mutableStateOf(longitud) }
 
 
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
