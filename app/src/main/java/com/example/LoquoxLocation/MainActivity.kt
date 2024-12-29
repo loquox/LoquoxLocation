@@ -196,9 +196,10 @@ fun LocationScreen(navController: NavHostController,
                        longitudPuntoDouble
                    )
                }
-                if (distancia <= proximidad && confirmarCoordenadas) {
-                    Toast.makeText(context, "Estas a$distancia ", Toast.LENGTH_SHORT).show()
-                }
+                //Verificar que la distancia es inferior a la proximidad
+//                if (distancia <= proximidad && confirmarCoordenadas) {
+//                    Toast.makeText(context, "Estas a$distancia ", Toast.LENGTH_SHORT).show()
+//                }
             }
         }
     }
@@ -290,7 +291,7 @@ fun IntroducirCoor(
                     onCoordenadasConfirmadas(sitiosViewModel.tituloLocal, sitiosViewModel.descripcionLocal)
                     titulolocal = ""
                     descripcionlocal = ""
-                    if (latitudPunto.isNotEmpty() && longitudPunto.isNotEmpty()) {
+                    if (sitiosViewModel.tituloLocal.isNotEmpty() && sitiosViewModel.descripcionLocal.isNotEmpty()) {
                         navController.navigate("listaSitios")
                     }
 
@@ -298,7 +299,9 @@ fun IntroducirCoor(
                     Text("Guardar Punto")
                 }
 
-                Button(onClick = {
+                Button(modifier = Modifier.
+                    padding(start = 10.dp)
+                    , onClick = {
                     sitiosViewModel.tituloLocal=""
                     sitiosViewModel.descripcionLocal=""
                 })
