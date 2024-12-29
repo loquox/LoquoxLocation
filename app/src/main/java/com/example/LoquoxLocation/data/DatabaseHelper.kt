@@ -15,7 +15,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             CREATE TABLE $TABLE_SITIOS (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 titulo TEXT,
-                foto TEXT,
+                descripcion TEXT,
                 latitud TEXT,
                 longitud TEXT
             )
@@ -31,11 +31,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     // Insertar un nuevo sitio
-    fun insertarSitio(titulo: String, foto: String,  latitud: String, longitud: String): Long {
+    fun insertarSitio(titulo: String, descripcion: String,  latitud: String, longitud: String): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("titulo", titulo)
-            put("foto", foto )
+            put("descripcion", descripcion)
             put("latitud", latitud)
             put("longitud", longitud)
         }
@@ -50,14 +50,24 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
         while (cursor.moveToNext()) {
             val titulo = cursor.getString(cursor.getColumnIndexOrThrow("titulo"))
-            val foto = cursor.getString(cursor.getColumnIndexOrThrow("foto"))
+            val descripcion = cursor.getString(cursor.getColumnIndexOrThrow("descripcion"))
             val latitud = cursor.getString(cursor.getColumnIndexOrThrow("latitud"))
             val longitud = cursor.getString(cursor.getColumnIndexOrThrow("longitud"))
-            sitiosList.add(Sitio("$titulo", "$foto", "$latitud", "$longitud"))
+            sitiosList.add(Sitio("$titulo", "$descripcion", "$latitud", "$longitud"))
         }
         cursor.close()
         db.close()
         return sitiosList
+    }
+
+    fun borrarSitio(sitio: Sitio) {
+        val db = writableDatabase
+        val whereClause = "titulo = ? AND descripcion = ? AND latitud = ? AND longitud = ?"
+        val whereArgs = arrayOf(sitio.titulo, sitio.descripcion, sitio.latidud, sitio.longitud)
+        db.delete(TABLE_SITIOS, whereClause, whereArgs)
+        db.close()
+
+
     }
 
     companion object {
@@ -65,7 +75,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         private const val DATABASE_NAME = "sitios_db"
 
         // Versión de la base de datos (si realizas cambios en la base de datos, aumenta esta versión)
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 3
 
         // Nombre de la tabla
         private const val TABLE_SITIOS = "sitios"

@@ -19,69 +19,140 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.LoquoxLocation.SitiosViewModel
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FormatLineSpacing
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.LoquoxLocation.MainActivity
 import com.example.LoquoxLocation.R
 import com.example.LoquoxLocation.data.Sitio
 
 
-@SuppressLint("SuspiciousIndentation")
+
+
+@SuppressLint("SuspiciousIndentation", "UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ListaSitios(navController: NavHostController,
                 sitiosViewModel: SitiosViewModel = viewModel()
 )
 
 {
-  val sitios = sitiosViewModel.listaSitios
+
+
+    val sitios by sitiosViewModel.listaSitios.observeAsState(initial = emptyList())
+
+    Scaffold(
+        content = { content(sitios, sitiosViewModel) },
+        bottomBar = { BottonBar(navController) }
+    )
+
+
+
+
+}
+
+
+@Composable
+fun content(sitios: List<Sitio>, sitiosViewModel: SitiosViewModel) {
+
+
     Column(modifier = Modifier.padding(top = 30.dp)) {
-        LazyColumn() {
+        LazyColumn {
             items(sitios) { sitio ->
-                tarjeta(sitio)
+                Tarjeta(sitio = sitio, sitiosViewModel)
             }
         }
+
     }
-    }
+
+
+}
+
 
 
 
 
 @Composable
-fun tarjeta(sitio: Sitio) {
-    Card(modifier = Modifier.
-            padding(bottom = 4.dp))
+fun Tarjeta(sitio: Sitio, sitiosViewModel: SitiosViewModel) {
+    ElevatedCard (modifier = Modifier.
+    padding(bottom = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp))
     {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Row(modifier = Modifier.
-                           fillMaxWidth().
-                            height(72.dp).
-                            padding(start = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically)
+
+        Row(modifier = Modifier.
+        fillMaxWidth().
+        height(72.dp).
+        padding(start = 10.dp),
+            verticalAlignment = Alignment.CenterVertically)
+
+        {
+            Box(modifier = Modifier.
+            background(color = Color.LightGray).
+            size(70.dp),
+                contentAlignment = Alignment.Center)
 
             {
-                Box(modifier = Modifier.
-                                background(color = Color.LightGray).
-                                size(70.dp),
-                                contentAlignment = Alignment.Center)
-
-                    {
-                    Image(painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                Image(painter = painterResource(id = R.drawable.ic_launcher_foreground),
                     contentDescription = null)
-                }
-                Spacer(modifier = Modifier.width(32.dp))
-                 Column(modifier = Modifier.fillMaxWidth()) {
-                     Text(text = "${sitio.titulo}",
-                         style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
-                     Text(text = "latitud: ${sitio.latidud} longitud: ${sitio.longitud}",
-                         style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
-
-                 }
             }
+            Spacer(modifier = Modifier.width(32.dp))
+            Column(modifier = Modifier.
+            fillMaxWidth().weight(1f) )
+            {
+                Text(text = "${sitio.titulo}",
+                    style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                Text(text = "latitud: ${sitio.latidud} ",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+                Text(text = "longitud: ${sitio.longitud}",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
+
+            }
+            IconButton(onClick = {sitiosViewModel.borrarSitio(sitio)}) {
+                Icon(imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    modifier =Modifier.size(40.dp)
+                )
+            }
+
+        }
+    }
+
+}
+
+@Composable
+fun BottonBar(navController: NavHostController) {
+    MaterialTheme {
+        NavigationBar {
+            NavigationBarItem(
+                icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+                selected = false,
+                onClick = { navController.navigate("ViewContainer")}
+            )
+
+            NavigationBarItem(
+                icon = { Icon(Icons.Filled.FormatLineSpacing, contentDescription = "Lista de Sitios") },
+                selected = false,
+                onClick = {  navController.navigate("listaSitios") }
+            )
         }
     }
 }
+
+
+
+
+

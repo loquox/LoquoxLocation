@@ -1,6 +1,7 @@
 package com.example.LoquoxLocation
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Looper
 import android.widget.Toast
@@ -8,20 +9,26 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FormatLineSpacing
+import androidx.compose.material.icons.filled.Home
+
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -31,11 +38,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.input.KeyboardType
+
+import androidx.compose.ui.tooling.data.UiToolingDataApi
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -70,26 +77,37 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             NavHost(navController = navController,
-                startDestination = "locationScreen"){
-                composable("locationScreen"){
-                    LocationScreen(navController, sitiosViewModel)  }
+                startDestination = "ViewContainer"){
+                composable("ViewContainer"){
 
+                    ViewContainer(navController, sitiosViewModel)
+                    }
                 composable("listaSitios") {
                     ListaSitios(navController,sitiosViewModel  )
-
                 }
             }
         }
     }
 }
 
-
-@OptIn(ExperimentalPermissionsApi::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
+fun ViewContainer(navController: NavHostController, sitiosViewModel: SitiosViewModel){
+   Scaffold(
+       content = { Content(navController, sitiosViewModel) },
+       bottomBar = { BottonBar(navController) }
+   )
+}
 
+@Composable
+fun Content(navController: NavHostController,sitiosViewModel: SitiosViewModel){
+    LocationScreen(navController, sitiosViewModel)
+}
+
+@OptIn(ExperimentalPermissionsApi::class, UiToolingDataApi::class)
+@Composable
 fun LocationScreen(navController: NavHostController,
                    sitiosViewModel: SitiosViewModel = viewModel()) {
-
 
     val context = LocalContext.current
     val locationClient = remember {LocationServices.getFusedLocationProviderClient(context)}
@@ -98,9 +116,8 @@ fun LocationScreen(navController: NavHostController,
     val proximidad = 100.0
     var distancia by rememberSaveable { mutableStateOf(0.0) }
 
-
     var tituloPunto by rememberSaveable { mutableStateOf("") }
-    var fotoPunto by rememberSaveable { mutableStateOf("") }
+    var descripcionPunto by rememberSaveable { mutableStateOf("") }
     var latitudPunto by rememberSaveable { mutableStateOf("") }
     var longitudPunto by rememberSaveable { mutableStateOf("") }
 
@@ -114,98 +131,31 @@ fun LocationScreen(navController: NavHostController,
     var confirmarCoordenadas by rememberSaveable { mutableStateOf(false) }
 
 
-
     Column(modifier = Modifier.padding(10.dp)) {
 
             IntroducirCoor(
                 navController,
                 tituloPunto,
-                fotoPunto,
-                latitudPunto,
-                longitudPunto,
+                descripcionPunto,
+                latitudPunto = latitudPunto,
+                longitudPunto = longitudPunto,
                 sitiosViewModel,
-                onCoordenadasConfirmadas = { titulo, foto, nuevaLatitud, nuevaLongitud ->
-                    latitudPunto = nuevaLatitud
-                    longitudPunto = nuevaLongitud
+                onCoordenadasConfirmadas = { titulo, descripcion->
                     tituloPunto = titulo
-                    fotoPunto = foto
+                    descripcionPunto = descripcion
                     confirmarCoordenadas = true
-                    sitiosViewModel.guardarSitio(tituloPunto, fotoPunto, latitudPunto, longitudPunto)
-
+                    if(tituloPunto.isNotEmpty() && descripcionPunto.isNotEmpty()) {
+                        sitiosViewModel.guardarSitio(
+                            tituloPunto,
+                            descripcionPunto,
+                            latitudPunto,
+                            longitudPunto
+                        )
+                    }else {
+                        Toast.makeText(context, "No hay titulo ni descripcion del Punto  ", Toast.LENGTH_SHORT).show()
+                    }
                 }
             )
-
-        Spacer(modifier = Modifier.padding(16.dp))
-
-
-        Card(modifier = Modifier.padding(10.dp).fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentSize(Alignment.Center)
-            ){
-                Column {
-                    Text(
-                        text = "Ubicacion actual",
-                        modifier = Modifier.padding(top = 16.dp),
-                        style = MaterialTheme.typography.titleMedium
-
-                    )
-
-
-                    Text(
-                        text = locationText,
-                        modifier = Modifier.padding(top = 16.dp)
-
-                    )
-                }
-        }}
-
-        Spacer(modifier = Modifier.padding(16.dp))
-
-        Card(modifier = Modifier.padding(10.dp).fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentSize(Alignment.Center)
-            ){
-                Column {
-
-                   MostrarCoordenadas(latitudPunto,longitudPunto)
-                }
-            }}
-
-
-
-        Card(modifier = Modifier.padding(10.dp).fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-
-                     ){
-                Column {
-                    Text(
-                        text = "Distancia al Punto",
-                        modifier = Modifier.padding(top = 16.dp).
-                        align(Alignment.Start),
-                        style = MaterialTheme.typography.titleMedium,
-
-
-                    )
-
-                    Text(
-                        text = distancia.toString(),
-                        modifier = Modifier.padding(top = 16.dp).
-                        align(Alignment.CenterHorizontally)
-
-                    )
-                }
-            }}
-
-
     }
 
     if (!locationPermissionState.status.isGranted) {
@@ -226,9 +176,11 @@ fun LocationScreen(navController: NavHostController,
     val locationCallback = object : LocationCallback() {
         override  fun onLocationResult(locationResult: LocationResult) {
             for (location in locationResult.locations) {
-                locationText =
-                    "Latitud: ${location.latitude},   " +
-                            "Longitud: ${location.longitude}"
+                latitudPunto = location.latitude.toString()
+                longitudPunto = location.longitude.toString()
+
+
+
                 val latitudPuntoDouble = latitudPunto.toDoubleOrNull()
                 val longitudPuntoDouble = longitudPunto.toDoubleOrNull()
 //                val latitudPuntoDouble = 43.337788498781876
@@ -272,15 +224,13 @@ fun LocationScreen(navController: NavHostController,
 fun IntroducirCoor(
                     navController: NavHostController,
                     titulo: String,
-                    foto: String,
-                    latitud: String,
-                    longitud: String,
+                    descripcion: String,
+                    latitudPunto: String,
+                    longitudPunto: String,
                     sitiosViewModel: SitiosViewModel,
-                   onCoordenadasConfirmadas: (String, String, String, String) -> Unit){
+                   onCoordenadasConfirmadas: (String, String) -> Unit){
     var titulolocal by rememberSaveable { mutableStateOf(titulo) }
-    var fotolocal by rememberSaveable { mutableStateOf(foto) }
-    var latitudlocal by rememberSaveable { mutableStateOf(latitud) }
-    var longitudlocal by rememberSaveable { mutableStateOf(longitud) }
+    var descripcionlocal by rememberSaveable { mutableStateOf(descripcion) }
 
 
 
@@ -293,15 +243,15 @@ fun IntroducirCoor(
             ){
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Introducir Coordenadas",
+                text = "Introducir Datos del Punto",
                 style = MaterialTheme.typography.headlineSmall
             )
 
             Spacer(modifier = Modifier.padding(16.dp))
 
             OutlinedTextField(
-                value = titulolocal,
-                onValueChange = { titulolocal = it },
+                value = sitiosViewModel.tituloLocal,
+                onValueChange = { sitiosViewModel.tituloLocal = it },
                 label = { Text("Introducir titulo del punto destino") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -310,77 +260,12 @@ fun IntroducirCoor(
             Spacer(modifier = Modifier.padding(16.dp))
 
             OutlinedTextField(
-                value = fotolocal,
-                onValueChange = { fotolocal = it },
-                label = { Text("Introducir foto del punto destino") },
+                value = sitiosViewModel.descripcionLocal,
+                onValueChange = { sitiosViewModel.descripcionLocal = it },
+                label = { Text("Introducir descripcion del punto destino") },
                 modifier = Modifier.fillMaxWidth()
             )
 
-
-
-            Spacer(modifier = Modifier.padding(16.dp))
-
-            OutlinedTextField(
-                value = latitudlocal,
-                onValueChange = {
-                    if (it.isEmpty() || it.matches(Regex("^-?[0-9]*(\\.[0-9]*)?$"))){
-                    latitudlocal = it }
-                    },
-                label = { Text("Introducir Latitud del punto destino") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions =  KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                )
-            )
-
-            Spacer(modifier = Modifier.padding(16.dp))
-
-            OutlinedTextField(
-                value = longitudlocal,
-                onValueChange = {
-                    if (it.isEmpty() || it.matches(Regex("^-?[0-9]*(\\.[0-9]*)?$"))){
-                        longitudlocal = it }
-                },
-                label = { Text("Introducir Longitud del punto destino") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions =  KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-
-                    )
-            )
-
-
-
-            Row {
-                Button(onClick = {
-                    onCoordenadasConfirmadas(titulolocal, fotolocal, latitudlocal, longitudlocal)
-                    titulolocal = ""
-                    fotolocal = ""
-                    latitudlocal = ""
-                    longitudlocal = ""
-                }) {
-                    Text("Confirmar")
-                }
-
-                Button(onClick = {
-                    navController.navigate("listaSitios")
-                }) {
-                    Text("Revisar la lista de sitios")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun MostrarCoordenadas(latitudPunto: Any?, longitudPunto: Any?) {
-
-    Card(modifier = Modifier.padding(10.dp).fillMaxWidth()){
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentSize(Alignment.Center)
-        ){
             Column {
                 Text(
                     text = "Coordenadas introducidas del Punto",
@@ -388,21 +273,44 @@ fun MostrarCoordenadas(latitudPunto: Any?, longitudPunto: Any?) {
                 )
 
                 Text(
-                    text = "LatitudPunto: $latitudPunto",
+                    text = "LatitudPunto: ${latitudPunto} ",
                     modifier = Modifier.padding(top = 16.dp)
                 )
 
                 Text(
-                    text = "LongitudPunto : $longitudPunto",
+                    text = "LongitudPunto : ${longitudPunto}",
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
 
+            Spacer(modifier = Modifier.padding(16.dp))
+
+            Row {
+                Button(onClick = {
+                    onCoordenadasConfirmadas(sitiosViewModel.tituloLocal, sitiosViewModel.descripcionLocal)
+                    titulolocal = ""
+                    descripcionlocal = ""
+                    if (latitudPunto.isNotEmpty() && longitudPunto.isNotEmpty()) {
+                        navController.navigate("listaSitios")
+                    }
+
+                }) {
+                    Text("Guardar Punto")
+                }
+
+                Button(onClick = {
+                    sitiosViewModel.tituloLocal=""
+                    sitiosViewModel.descripcionLocal=""
+                })
+                {
+                    Text("Borrar")
+                }
+
+
+
+            }
         }
-
     }
-
-
 }
 
 
@@ -425,8 +333,24 @@ fun CalcularDistancia(lat1: Double, lon1: Double, lat2: Double, lon2: Double): D
 }
 
 
+@Composable
+fun BottonBar(navController: NavHostController) {
+    MaterialTheme {
+        NavigationBar {
+            NavigationBarItem(
+                icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
+                selected = false,
+                onClick = { navController.navigate("ViewContainer")}
+            )
 
-
+            NavigationBarItem(
+                icon = { Icon(Icons.Filled.FormatLineSpacing, contentDescription = "Lista de Sitios") },
+                selected = false,
+                onClick = {  navController.navigate("listaSitios") }
+            )
+        }
+    }
+}
 
 
 

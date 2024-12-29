@@ -41,10 +41,15 @@ android {
 
 dependencies {
 
+    implementation ("androidx.compose.material3:material3:1.2.0") // Última versión disponible
+    implementation ("androidx.compose.material:material:1.6.0")   // Última versión si usas Material 2
+
+    implementation ("androidx.compose.material:material-icons-extended:1.6.0")
 
 
     implementation("androidx.room:room-runtime:2.5.0")
     implementation(libs.androidx.benchmark.macro)
+    implementation(libs.androidx.runtime.livedata)
     annotationProcessor("androidx.room:room-compiler:2.5.0")
 
     // Opcional: para usar coroutines con Room
