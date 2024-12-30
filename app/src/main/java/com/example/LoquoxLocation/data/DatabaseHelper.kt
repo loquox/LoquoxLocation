@@ -49,11 +49,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         val cursor: Cursor = db.query(TABLE_SITIOS, null, null, null, null, null, null)
 
         while (cursor.moveToNext()) {
+            val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
             val titulo = cursor.getString(cursor.getColumnIndexOrThrow("titulo"))
             val descripcion = cursor.getString(cursor.getColumnIndexOrThrow("descripcion"))
             val latitud = cursor.getString(cursor.getColumnIndexOrThrow("latitud"))
             val longitud = cursor.getString(cursor.getColumnIndexOrThrow("longitud"))
-            sitiosList.add(Sitio("$titulo", "$descripcion", "$latitud", "$longitud"))
+            sitiosList.add(Sitio(id, titulo, descripcion, latitud, longitud))
         }
         cursor.close()
         db.close()
@@ -70,12 +71,48 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     }
 
+    fun obtenerSitioPorId(sitioId: String): Sitio? {
+        val db = readableDatabase
+        val cursor: Cursor = db.query(
+            TABLE_SITIOS,
+            null,
+            "id = ?",
+            arrayOf(sitioId),
+            null,
+            null,
+            null
+        )
+        var sitio: Sitio? = null
+        if (cursor.moveToFirst()) {
+            val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+            val titulo = cursor.getString(cursor.getColumnIndexOrThrow("titulo"))
+            val descripcion = cursor.getString(cursor.getColumnIndexOrThrow("descripcion"))
+            val latitud = cursor.getString(cursor.getColumnIndexOrThrow("latitud"))
+            val longitud = cursor.getString(cursor.getColumnIndexOrThrow("longitud"))
+
+
+            sitio = Sitio(
+                id = id,
+                titulo = titulo,
+                descripcion = descripcion,
+                latidud = latitud,
+                longitud = longitud
+            )
+        }
+
+        cursor.close()
+        db.close()
+
+        return sitio
+
+    }
+
     companion object {
         // Nombre de la base de datos
         private const val DATABASE_NAME = "sitios_db"
 
         // Versión de la base de datos (si realizas cambios en la base de datos, aumenta esta versión)
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
 
         // Nombre de la tabla
         private const val TABLE_SITIOS = "sitios"

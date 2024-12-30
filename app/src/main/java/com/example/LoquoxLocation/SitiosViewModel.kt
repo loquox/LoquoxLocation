@@ -54,4 +54,10 @@ class SitiosViewModel(applicationContext: Context): AndroidViewModel(application
         }
 
     }
+
+    fun obtenerSitioPorId(sitioId: String?): Sitio? {
+
+        return sitioId?.let { dbHelper.obtenerSitioPorId(sitioId) }
+
+    }
     }

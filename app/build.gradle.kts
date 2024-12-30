@@ -50,6 +50,8 @@ dependencies {
     implementation("androidx.room:room-runtime:2.5.0")
     implementation(libs.androidx.benchmark.macro)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.play.services.maps)
+    implementation(libs.androidx.preference.ktx)
     annotationProcessor("androidx.room:room-compiler:2.5.0")
 
     // Opcional: para usar coroutines con Room
@@ -65,8 +67,16 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.play.services.location)
 
+
+    // Para osmdroid
+    implementation ("org.osmdroid:osmdroid-android:6.1.15")
+
+
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
     implementation("androidx.navigation:navigation-compose:2.6.0")
+
+    implementation("com.google.maps.android:maps-compose:2.12.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

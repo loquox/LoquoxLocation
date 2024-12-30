@@ -3,6 +3,7 @@ package com.example.LoquoxLocation.screens
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,8 +57,8 @@ fun ListaSitios(navController: NavHostController,
     val sitios by sitiosViewModel.listaSitios.observeAsState(initial = emptyList())
 
     Scaffold(
-        content = { content(sitios, sitiosViewModel) },
-        bottomBar = { BottonBar(navController) }
+        content = { Content(sitios, sitiosViewModel , navController) },
+        bottomBar = { BottonBarListaSitios(navController) }
     )
 
 
@@ -67,13 +68,13 @@ fun ListaSitios(navController: NavHostController,
 
 
 @Composable
-fun content(sitios: List<Sitio>, sitiosViewModel: SitiosViewModel) {
+fun Content(sitios: List<Sitio>, sitiosViewModel: SitiosViewModel, navController: NavHostController) {
 
 
     Column(modifier = Modifier.padding(top = 30.dp)) {
         LazyColumn {
             items(sitios) { sitio ->
-                Tarjeta(sitio = sitio, sitiosViewModel)
+                Tarjeta(sitio = sitio, sitiosViewModel, navController)
             }
         }
 
@@ -87,9 +88,13 @@ fun content(sitios: List<Sitio>, sitiosViewModel: SitiosViewModel) {
 
 
 @Composable
-fun Tarjeta(sitio: Sitio, sitiosViewModel: SitiosViewModel) {
-    ElevatedCard (modifier = Modifier.
-    padding(bottom = 4.dp),
+fun Tarjeta(sitio: Sitio, sitiosViewModel: SitiosViewModel, navController: NavHostController) {
+    ElevatedCard (
+        modifier = Modifier.
+             clickable {
+                navController.navigate("descripcionSitio/${sitio.id}")
+             }.
+        padding(bottom = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp))
     {
 
@@ -134,7 +139,7 @@ fun Tarjeta(sitio: Sitio, sitiosViewModel: SitiosViewModel) {
 }
 
 @Composable
-fun BottonBar(navController: NavHostController) {
+fun BottonBarListaSitios(navController: NavHostController) {
     MaterialTheme {
         NavigationBar {
             NavigationBarItem(

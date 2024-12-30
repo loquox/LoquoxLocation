@@ -46,10 +46,14 @@ import androidx.compose.ui.tooling.data.UiToolingDataApi
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.LoquoxLocation.screens.DescripcionSitio
+
 
 import com.example.LoquoxLocation.screens.ListaSitios
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -83,7 +87,15 @@ class MainActivity : ComponentActivity() {
                     ViewContainer(navController, sitiosViewModel)
                     }
                 composable("listaSitios") {
-                    ListaSitios(navController,sitiosViewModel  )
+                    ListaSitios(navController,sitiosViewModel)
+                }
+
+                composable(
+                    route = "descripcionSitio/{sitioId}",
+                    arguments = listOf(navArgument("sitioId") { type = NavType.StringType })
+                ){ backStackEntry ->
+                    val sitioId = backStackEntry.arguments?.getString("sitioId")
+                    DescripcionSitio(navController,sitioId, sitiosViewModel)
                 }
             }
         }
@@ -253,6 +265,7 @@ fun IntroducirCoor(
             OutlinedTextField(
                 value = sitiosViewModel.tituloLocal,
                 onValueChange = { sitiosViewModel.tituloLocal = it },
+                maxLines = 1,
                 label = { Text("Introducir titulo del punto destino") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -289,11 +302,12 @@ fun IntroducirCoor(
             Row {
                 Button(onClick = {
                     onCoordenadasConfirmadas(sitiosViewModel.tituloLocal, sitiosViewModel.descripcionLocal)
-                    titulolocal = ""
-                    descripcionlocal = ""
+
                     if (sitiosViewModel.tituloLocal.isNotEmpty() && sitiosViewModel.descripcionLocal.isNotEmpty()) {
                         navController.navigate("listaSitios")
                     }
+                    sitiosViewModel.tituloLocal=""
+                    sitiosViewModel.descripcionLocal=""
 
                 }) {
                     Text("Guardar Punto")
@@ -351,6 +365,7 @@ fun BottonBar(navController: NavHostController) {
                 selected = false,
                 onClick = {  navController.navigate("listaSitios") }
             )
+
         }
     }
 }
