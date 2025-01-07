@@ -1,7 +1,9 @@
 package com.example.LoquoxLocation
 
+import UbicacionViewModelFactory
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Application
 import android.os.Bundle
 import android.os.Looper
 import android.widget.Toast
@@ -33,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +59,7 @@ import com.example.LoquoxLocation.screens.DescripcionSitio
 
 
 import com.example.LoquoxLocation.screens.ListaSitios
+import com.example.LoquoxLocation.ui.theme.UbicacionViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -116,6 +120,7 @@ fun Content(navController: NavHostController,sitiosViewModel: SitiosViewModel){
     LocationScreen(navController, sitiosViewModel)
 }
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalPermissionsApi::class, UiToolingDataApi::class)
 @Composable
 fun LocationScreen(navController: NavHostController,
@@ -132,29 +137,48 @@ fun LocationScreen(navController: NavHostController,
     var descripcionPunto by rememberSaveable { mutableStateOf("") }
     var latitudPunto by rememberSaveable { mutableStateOf("") }
     var longitudPunto by rememberSaveable { mutableStateOf("") }
+    val application = LocalContext.current.applicationContext as Application
+
+
+    val ubicacionViewModel: UbicacionViewModel = viewModel(
+        factory = UbicacionViewModelFactory(application)
+    )
+
+    LaunchedEffect(Unit) {
+        ubicacionViewModel.iniciarActualizacionUbicacion()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            ubicacionViewModel.deternetActualizacionUbicacion()
+        }
+    }
 
 
     val locationPermissionState = rememberPermissionState(
         permission = Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-    val lifecycleOwner = LocalLifecycleOwner.current
     var showDialog by remember { mutableStateOf(false) }
     var confirmarCoordenadas by rememberSaveable { mutableStateOf(false) }
+
+    val ubicacion = ubicacionViewModel.ubicacion.collectAsState(initial = null).value
+
 
 
     Column(modifier = Modifier.padding(10.dp)) {
 
+        if (ubicacion != null) {
             IntroducirCoor(
                 navController,
-                tituloPunto,
-                descripcionPunto,
-                latitudPunto = latitudPunto,
-                longitudPunto = longitudPunto,
+                latitudPunto = ubicacion.latitude.toString(),
+                longitudPunto = ubicacion.longitude.toString(),
                 sitiosViewModel,
-                onCoordenadasConfirmadas = { titulo, descripcion->
+                onCoordenadasConfirmadas = { titulo, descripcion, latitud, longitud ->
                     tituloPunto = titulo
                     descripcionPunto = descripcion
+                    latitudPunto = latitud
+                    longitudPunto = longitud
                     confirmarCoordenadas = true
                     if(tituloPunto.isNotEmpty() && descripcionPunto.isNotEmpty()) {
                         sitiosViewModel.guardarSitio(
@@ -164,10 +188,11 @@ fun LocationScreen(navController: NavHostController,
                             longitudPunto
                         )
                     }else {
-                        Toast.makeText(context, "No hay titulo ni descripcion del Punto  ", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "No hay titulo o descripcion del Punto  ", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
+        }
     }
 
     if (!locationPermissionState.status.isGranted) {
@@ -177,75 +202,16 @@ fun LocationScreen(navController: NavHostController,
             Text(text = "Solicitar Permiso")
         }
     }
-
-
-    val locationRequest = LocationRequest.create().apply {
-        interval = 10000
-        fastestInterval = 5000
-        priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-    }
-
-    val locationCallback = object : LocationCallback() {
-        override  fun onLocationResult(locationResult: LocationResult) {
-            for (location in locationResult.locations) {
-                latitudPunto = location.latitude.toString()
-                longitudPunto = location.longitude.toString()
-
-
-
-                val latitudPuntoDouble = latitudPunto.toDoubleOrNull()
-                val longitudPuntoDouble = longitudPunto.toDoubleOrNull()
-//                val latitudPuntoDouble = 43.337788498781876
-//                val longitudPuntoDouble = -1.7802331596025087
-
-
-               if (latitudPuntoDouble != null && longitudPuntoDouble != null
-                   && confirmarCoordenadas ) {
-                   distancia = CalcularDistancia(
-                       location.latitude,
-                       location.longitude,
-                       latitudPuntoDouble,
-                       longitudPuntoDouble
-                   )
-               }
-                //Verificar que la distancia es inferior a la proximidad
-//                if (distancia <= proximidad && confirmarCoordenadas) {
-//                    Toast.makeText(context, "Estas a$distancia ", Toast.LENGTH_SHORT).show()
-//                }
-            }
-        }
-    }
-
-    LaunchedEffect(locationPermissionState.status) {
-        if (locationPermissionState.status.isGranted) {
-            locationClient.requestLocationUpdates(locationRequest,
-               locationCallback, Looper.getMainLooper())
-        }
-
-    }
-
-    DisposableEffect(lifecycleOwner)
-    {
-        onDispose {
-            locationClient.removeLocationUpdates(locationCallback)
-        }
-    }
 }
 
 
 @Composable
 fun IntroducirCoor(
                     navController: NavHostController,
-                    titulo: String,
-                    descripcion: String,
                     latitudPunto: String,
                     longitudPunto: String,
                     sitiosViewModel: SitiosViewModel,
-                   onCoordenadasConfirmadas: (String, String) -> Unit){
-    var titulolocal by rememberSaveable { mutableStateOf(titulo) }
-    var descripcionlocal by rememberSaveable { mutableStateOf(descripcion) }
-
-
+                   onCoordenadasConfirmadas: (String, String, String , String ) -> Unit){
 
     Card(
         modifier = Modifier
@@ -301,7 +267,7 @@ fun IntroducirCoor(
 
             Row {
                 Button(onClick = {
-                    onCoordenadasConfirmadas(sitiosViewModel.tituloLocal, sitiosViewModel.descripcionLocal)
+                    onCoordenadasConfirmadas(sitiosViewModel.tituloLocal, sitiosViewModel.descripcionLocal, latitudPunto, longitudPunto)
 
                     if (sitiosViewModel.tituloLocal.isNotEmpty() && sitiosViewModel.descripcionLocal.isNotEmpty()) {
                         navController.navigate("listaSitios")
@@ -331,23 +297,6 @@ fun IntroducirCoor(
 }
 
 
-fun CalcularDistancia(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-    val earthRadius = 6371 // Radio de la Tierra en kilómetros
-
-    val dLat = Math.toRadians(lat2 - lat1)
-    val dLon = Math.toRadians(lon2 - lon1)
-
-    val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2)
-
-    val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-    val result = earthRadius * c * 1000
-
-
-    return result // Distancia en metros
-}
 
 
 @Composable

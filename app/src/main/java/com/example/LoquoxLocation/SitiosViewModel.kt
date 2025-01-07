@@ -11,6 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.LoquoxLocation.data.DatabaseHelper
 import com.example.LoquoxLocation.data.Sitio
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.launch
 
 class SitiosViewModel(applicationContext: Context): AndroidViewModel(applicationContext as Application) {
@@ -21,6 +22,7 @@ class SitiosViewModel(applicationContext: Context): AndroidViewModel(application
 
     var tituloLocal by mutableStateOf("")
     var descripcionLocal by mutableStateOf("")
+
 
 
     init {

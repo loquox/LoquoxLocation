@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.play.services.maps)
     implementation(libs.androidx.preference.ktx)
+
     annotationProcessor("androidx.room:room-compiler:2.5.0")
 
     // Opcional: para usar coroutines con Room
