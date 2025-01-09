@@ -58,6 +58,9 @@ dependencies {
     // Opcional: para usar coroutines con Room
     implementation("androidx.room:room-ktx:2.5.0")
 
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -78,6 +81,8 @@ dependencies {
 
     implementation("com.google.maps.android:maps-compose:2.12.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

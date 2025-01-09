@@ -5,4 +5,5 @@ data class Sitio(
     val titulo: String,
     val descripcion: String,
     val latidud: String,
-    val longitud: String)
+    val longitud: String,
+    val imagen: String)

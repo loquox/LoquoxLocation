@@ -1,6 +1,7 @@
 package com.example.LoquoxLocation.screens
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,10 +38,14 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.LoquoxLocation.R
 import com.example.LoquoxLocation.data.Sitio
+
 
 
 
@@ -111,8 +116,25 @@ fun Tarjeta(sitio: Sitio, sitiosViewModel: SitiosViewModel, navController: NavHo
                 contentAlignment = Alignment.Center)
 
             {
-                Image(painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = null)
+              if (sitio.imagen != null){
+
+                   AsyncImage(
+                      model = ImageRequest.Builder(LocalContext.current)
+                          .data(sitio.imagen)
+                          .crossfade(true)
+                          .build(),
+                        contentDescription = "Imagen del sitio",
+
+
+                  )
+              } else {
+                  Image(
+                      painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                      contentDescription = "Imagen de marcador de posición",
+
+                  )
+
+              }
             }
             Spacer(modifier = Modifier.width(32.dp))
             Column(modifier = Modifier.

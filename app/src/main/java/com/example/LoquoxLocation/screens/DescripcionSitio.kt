@@ -25,6 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -35,6 +39,7 @@ import com.example.LoquoxLocation.SitiosViewModel
 import com.example.LoquoxLocation.data.Sitio
 import com.example.LoquoxLocation.ui.theme.UbicacionViewModel
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.Marker
 
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.MapView
@@ -82,6 +87,7 @@ fun Content(sitio: Sitio?, ubicacionViewModel: UbicacionViewModel) {
         val sitioLat = sitio.latidud.toDoubleOrNull()
         val sitioLon = sitio.longitud.toDoubleOrNull()
 
+
         if (sitioLat == null && sitioLon == null) {
             Text(text = "Sitio no encontrado")
             return
@@ -92,18 +98,20 @@ fun Content(sitio: Sitio?, ubicacionViewModel: UbicacionViewModel) {
 
         val distancia = ubicacion?.let { CalcularDistancia(it.latitude,it.longitude, sitio.latidud.toDouble(), sitio.longitud.toDouble()) }
         ElevatedCard(
-            modifier = Modifier.
-            statusBarsPadding().padding(10.dp),
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(10.dp),
 
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp).
-                              fillMaxWidth()
+            Column(modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
             )
             {
-                Column(modifier = Modifier.
-                                padding(10.dp).
-                                weight(1f)
+                Column(modifier = Modifier
+                    .padding(10.dp)
+                    .weight(1f)
 
                 ) {
                     Text(
@@ -117,7 +125,7 @@ fun Content(sitio: Sitio?, ubicacionViewModel: UbicacionViewModel) {
                     OpenStreetMap(sitio, ubicacion)
                     Spacer(modifier = Modifier.height(40.dp))
                     Text(modifier = Modifier.padding(top = 20.dp),
-                        text = "Distancia al Punto: ${distancia} metros ")
+                        text = "Distancia al Punto: ${String.format("%.2f", distancia)} metros ")
                 }
             }
         }
@@ -133,6 +141,9 @@ fun OpenStreetMap(sitio: Sitio, ubicacion: LatLng?) {
         .getInstance().load(context,
         android.preference.PreferenceManager.getDefaultSharedPreferences(context))
 
+    var userMarker by remember { mutableStateOf<Marker?>(null) }
+    var routePolyline by remember { mutableStateOf<org.osmdroid.views.overlay.Polyline?>(null) }
+
     AndroidView(
         factory = { ctx ->
             MapView(ctx).apply {
@@ -145,6 +156,8 @@ fun OpenStreetMap(sitio: Sitio, ubicacion: LatLng?) {
                     setZoom(15.0)
                     setCenter(org.osmdroid.util.GeoPoint(latitud, longitud))
                 }
+                userMarker = Marker(this)
+                overlays.add(userMarker)
             }
         },
         modifier = Modifier
@@ -157,7 +170,8 @@ fun OpenStreetMap(sitio: Sitio, ubicacion: LatLng?) {
             val longitud = sitio.longitud.toDoubleOrNull() ?: 0.0
 
             val market = Marker(view)
-            view.overlays.clear()
+            view.overlays.removeIf { it is Marker && it != userMarker }
+
             market.position = org.osmdroid.util.GeoPoint(latitud, longitud)
             market.title = sitio.titulo
             market.snippet = sitio.descripcion
@@ -166,24 +180,19 @@ fun OpenStreetMap(sitio: Sitio, ubicacion: LatLng?) {
             ubicacion?.let {
                 val markerPosition = org.osmdroid.util.GeoPoint(it.latitude, it.longitude)
 
-                val userMarker = Marker(view)
-                userMarker.position = markerPosition
-                userMarker.title = "Ubicacion actual"
-                view.overlays.add(userMarker)
-
+                userMarker?.position = markerPosition
+                userMarker?.title = "Ubicacion actual"
                 view.controller.setCenter(markerPosition)
+
             }
 
             market.showInfoWindow()
             view.invalidate()
+
         }
     )
 
-
-
-
 }
-
 
 
 fun CalcularDistancia(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {

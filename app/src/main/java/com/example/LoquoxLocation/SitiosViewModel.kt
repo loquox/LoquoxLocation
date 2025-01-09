@@ -19,9 +19,9 @@ class SitiosViewModel(applicationContext: Context): AndroidViewModel(application
     val _listaSitios = MutableLiveData<List<Sitio>>()
     private val dbHelper = DatabaseHelper(applicationContext)
     val listaSitios: LiveData<List<Sitio>> get() = _listaSitios
-
     var tituloLocal by mutableStateOf("")
     var descripcionLocal by mutableStateOf("")
+    var imagenLocal by mutableStateOf("")
 
 
 
@@ -29,22 +29,20 @@ class SitiosViewModel(applicationContext: Context): AndroidViewModel(application
         cargarSitios()
     }
 
-
     fun cargarSitios(){
         viewModelScope.launch {
             val sitios = dbHelper.obtenerSitios()
             _listaSitios.postValue(sitios)
-
         }
     }
 
-    fun guardarSitio(titulo: String, descripcion: String, latitud: String, longitud: String ) {
+    fun guardarSitio(titulo: String, descripcion: String, latitud: String, longitud: String, imagen: String ) {
         viewModelScope.launch {
-            dbHelper.insertarSitio(titulo, descripcion, latitud, longitud)
+            dbHelper.insertarSitio(titulo, descripcion, latitud, longitud, imagen)
             cargarSitios()
-
             tituloLocal = titulo
             descripcionLocal = descripcion
+            imagenLocal = imagen
         }
 }
 
@@ -62,4 +60,12 @@ class SitiosViewModel(applicationContext: Context): AndroidViewModel(application
         return sitioId?.let { dbHelper.obtenerSitioPorId(sitioId) }
 
     }
+
+    fun actualizarImagen(uri: String) {
+        imagenLocal = uri
     }
+
+
+
+
+}

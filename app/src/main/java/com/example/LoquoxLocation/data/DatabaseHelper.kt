@@ -17,7 +17,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 titulo TEXT,
                 descripcion TEXT,
                 latitud TEXT,
-                longitud TEXT
+                longitud TEXT,
+                imagen TEXT
             )
         """
         db.execSQL(createTable)
@@ -31,13 +32,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     // Insertar un nuevo sitio
-    fun insertarSitio(titulo: String, descripcion: String,  latitud: String, longitud: String): Long {
+    fun insertarSitio(titulo: String, descripcion: String,  latitud: String, longitud: String, imagen: String): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("titulo", titulo)
             put("descripcion", descripcion)
             put("latitud", latitud)
             put("longitud", longitud)
+            put("imagen", imagen)
         }
         return db.insert(TABLE_SITIOS, null, values)
     }
@@ -54,7 +56,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             val descripcion = cursor.getString(cursor.getColumnIndexOrThrow("descripcion"))
             val latitud = cursor.getString(cursor.getColumnIndexOrThrow("latitud"))
             val longitud = cursor.getString(cursor.getColumnIndexOrThrow("longitud"))
-            sitiosList.add(Sitio(id, titulo, descripcion, latitud, longitud))
+            val imagen = cursor.getString(cursor.getColumnIndexOrThrow("imagen"))
+            sitiosList.add(Sitio(id, titulo, descripcion, latitud, longitud, imagen))
         }
         cursor.close()
         db.close()
@@ -63,8 +66,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     fun borrarSitio(sitio: Sitio) {
         val db = writableDatabase
-        val whereClause = "titulo = ? AND descripcion = ? AND latitud = ? AND longitud = ?"
-        val whereArgs = arrayOf(sitio.titulo, sitio.descripcion, sitio.latidud, sitio.longitud)
+        val whereClause = "titulo = ? AND descripcion = ? AND latitud = ? AND longitud = ? AND imagen = ?"
+        val whereArgs = arrayOf(sitio.titulo, sitio.descripcion, sitio.latidud, sitio.longitud, sitio.imagen)
         db.delete(TABLE_SITIOS, whereClause, whereArgs)
         db.close()
 
@@ -89,6 +92,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             val descripcion = cursor.getString(cursor.getColumnIndexOrThrow("descripcion"))
             val latitud = cursor.getString(cursor.getColumnIndexOrThrow("latitud"))
             val longitud = cursor.getString(cursor.getColumnIndexOrThrow("longitud"))
+            val imagen = cursor.getString(cursor.getColumnIndexOrThrow("imagen"))
 
 
             sitio = Sitio(
@@ -96,7 +100,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 titulo = titulo,
                 descripcion = descripcion,
                 latidud = latitud,
-                longitud = longitud
+                longitud = longitud,
+                imagen = imagen
             )
         }
 
@@ -112,7 +117,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         private const val DATABASE_NAME = "sitios_db"
 
         // Versión de la base de datos (si realizas cambios en la base de datos, aumenta esta versión)
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 7
 
         // Nombre de la tabla
         private const val TABLE_SITIOS = "sitios"
